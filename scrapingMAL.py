@@ -122,23 +122,53 @@ try:
 
             width = float(soup.find('div', class_='recommended__bar')['style'].split(':')[1].split('%')[0])
             width = round(width, 2)
-            listOfAnime.append([width, title])
+            recommended = soup.find_all('div', class_='recommended')
+            rec = int(recommended[0].find('strong').text)
 
-    df = pd.DataFrame(listOfAnime, columns=['Satisfaction', 'Title'])
+            notrecommended = soup.find_all('div', class_='not-recommended')
+            notrec = int(notrecommended[0].find('strong').text)
+
+            mixedfeelings = soup.find_all('div', class_='mixed-feelings')
+            mix = int(mixedfeelings[0].find('strong').text)
+            listOfAnime.append([width, title, rec, notrec, mix])
+
+    df = pd.DataFrame(listOfAnime, columns=['Satisfaction', 'Title', 'Recommended', 'Not Recommended', 'Mixed Feelings'])
     df = df.sort_values(by='Satisfaction', ascending=False)
     print("================================")
     print("Here is the list of anime you have searched: ")
     print(df)
 
-    print("================================")
-    print("Do you want to save the result to a CSV file so u won't lose it? (y/n)")
-    answer = input()
-
-    if answer.lower() == 'y':
-        df.to_csv('anime_satisfaction.csv', mode='a', header=not os.path.exists('anime_satisfaction.csv'), index=False)
-        print("The result has been saved to anime_satisfaction.csv")
+    print("Let's check whether u already have the file or not")
+    if os.path.exists('anime_satisfaction.csv'):
+        print("You already have the file anime_satisfaction.csv")
+        file_there = True
     else:
-        print("Alright, the result is not saved")
+        print("You don't have the file anime_satisfaction.csv")
+        file_there = False
+
+    print("================================")
+    if file_there:
+        print("Do you want to overwrite the file or append them from your old file? (overwrite/append) ")
+        answer = input()
+
+        if answer.lower() == 'overwrite':
+            df.to_csv('anime_satisfaction.csv', index=False)
+            print("The result has been saved to anime_satisfaction.csv")
+        elif answer.lower() == 'append':
+            old_df = pd.read_csv('anime_satisfaction.csv')
+            new_df = pd.concat([old_df, df], ignore_index=True)
+            new_df.to_csv('anime_satisfaction.csv', index=False)
+            print("The result has been appended to anime_satisfaction.csv")
+            
+    else:
+        print("Do you want to save the result to a CSV file so u won't lose it? (y/n)")
+        answer = input()
+
+        if answer.lower() == 'y':
+            df.to_csv('anime_satisfaction.csv', index=False)
+            print("The result has been saved to anime_satisfaction.csv")
+        else:
+            print("Alright, the result is not saved")
 
     print("Thank you for using MyAnimeList Recommendation Anime by Raion! Have a great day!")
 
